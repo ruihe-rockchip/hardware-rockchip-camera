@@ -122,7 +122,6 @@ LOCAL_C_INCLUDES += \
     system/core/liblog/include
 endif
 LOCAL_C_INCLUDES += \
-    hardware/rockchip/libgralloc \
     hardware/libhardware/include \
     system/media/camera/include \
     system/core/libsync \
@@ -133,6 +132,21 @@ LOCAL_C_INCLUDES += \
     hardware/rockchip/librga \
     external/libchrome \
     $(LOCAL_PATH)/include/arc
+
+ifeq ($(strip $(TARGET_BOARD_PLATFORM_GPU)), mali-tDVx)
+LOCAL_C_INCLUDES += \
+       hardware/rockchip/libgralloc/bifrost
+endif
+
+ifneq (,$(filter mali-t860 mali-t760, $(TARGET_BOARD_PLATFORM_GPU)))
+LOCAL_C_INCLUDES += \
+       hardware/rockchip/libgralloc/midgard
+endif
+
+ifneq (,$(filter mali400 mali450, $(TARGET_BOARD_PLATFORM_GPU)))
+LOCAL_C_INCLUDES += \
+       hardware/rockchip/libgralloc/utgard
+endif
 
 #cpphacks
 CPPHACKS = \
