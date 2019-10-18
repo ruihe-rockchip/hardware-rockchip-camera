@@ -747,6 +747,8 @@ status_t CameraHWInfo::findAttachedSubdevs(const std::string &mcPath,
 
     LOGI("@%s", __FUNCTION__);
 
+    drv_info.mFlashNum = 0;
+
     int fd = open(mcPath.c_str(), O_RDONLY);
     if (fd == -1) {
         LOGW("Could not openg media controller device: %s!", strerror(errno));
