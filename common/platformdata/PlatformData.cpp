@@ -1095,15 +1095,13 @@ status_t CameraHWInfo::getSensorEntityName(int32_t cameraId,
 
     std::vector<std::string> elementNames;
     PlatformData::getCameraHWInfo()->getMediaCtlElementNames(elementNames);
-    const struct SensorDriverDescriptor* drvInfo =
-        &PlatformData::getCameraHWInfo()->mSensorInfo[cameraId];
     for (auto &it: elementNames) {
         if (it.find(sensorName) != std::string::npos &&
-            it.find(drvInfo->mModuleIndexStr) != std::string::npos)
+            it.find(cap->mModuleIndexStr) != std::string::npos)
             sensorEntityName = it;
     }
     if(sensorEntityName == "none") {
-        LOGE("@%s : Sensor name is case sensitive, Please check it in Camera3_profiles.xml with driver sensor name!!!",
+        LOGE("@%s : Sensor name %s is case sensitive, Please check it in Camera3_profiles.xml with driver sensor name!!!",
              __FUNCTION__, sensorName.c_str());
         return UNKNOWN_ERROR;
     }
@@ -1226,6 +1224,23 @@ status_t CameraHWInfo::getSensorBayerPattern(int32_t cameraId,
         LOGE("Error closing device (%s)", devname);
 
     return ret;
+}
+
+const struct SensorDriverDescriptor* CameraHWInfo::getSensorDrvDes(int32_t cameraId) const
+{
+    const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
+
+    if (!cap) {
+        LOGE("Can't get Sensor cap info !");
+        return NULL;
+    }
+
+    for (auto& des : mSensorInfo) {
+        if (des.mModuleIndexStr == cap->mModuleIndexStr)
+            return &des;
+    }
+
+    return NULL;
 }
 
 status_t CameraHWInfo::getSensorFrameDuration(int32_t cameraId, int32_t &duration) const
