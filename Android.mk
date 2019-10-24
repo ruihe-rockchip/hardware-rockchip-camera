@@ -259,6 +259,12 @@ endif
 ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 29)))
     LOCAL_CFLAGS += -DANDROID_VERSION_ABOVE_10_X
     LOCAL_CPPFLAGS += -std=c++1y
+
+ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3368)
+LOCAL_C_INCLUDES += \
+    system/core/libion/original-kernel-headers
+endif
+
 endif
 
 LOCAL_MODULE_RELATIVE_PATH := hw
