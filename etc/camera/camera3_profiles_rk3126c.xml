@@ -187,7 +187,7 @@
             <sensor.info.exposureTimeRange value="100000,53000000"/>
             <sensor.info.maxFrameDuration value="66666666"/>
             <sensor.info.physicalSize value="5.5,4.5"/> <!-- 4224x1.12um 3136x1.12um -->
-            <sensor.info.pixelArraySize value="1600x1200"/>
+            <sensor.info.pixelArraySize value="1664x1248"/>
             <sensor.info.whiteLevel value="0"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <sensor.info.timestampSource value="UNKNOWN"/>
             <!-- Sensor -->

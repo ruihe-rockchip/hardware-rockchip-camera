@@ -459,7 +459,7 @@
             <sensor.info.exposureTimeRange value="100000,200000000"/> <!-- COULD NOT EDIT, not unsed now -->
             <sensor.info.maxFrameDuration value="200000000"/> <!-- COULD NOT EDIT, not unsed now -->
             <sensor.info.physicalSize value="5.5,4.5"/> <!-- 4224x1.12um 3136x1.12um -->
-            <sensor.info.pixelArraySize value="1600x1200"/> <!-- sensor max output frame size -->
+            <sensor.info.pixelArraySize value="1664x1248"/> <!-- sensor max output frame size -->
             <sensor.info.whiteLevel value="0"/> <!-- SHOULD NOT EDIT -->
             <sensor.info.timestampSource value="UNKNOWN"/> <!-- SHOULD NOT EDIT -->
             <!-- Sensor -->
