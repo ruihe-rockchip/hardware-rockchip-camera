@@ -133,6 +133,7 @@
                 sensor.testPatternMode,
                 sensor.timestamp,
                 sensor.rollingShutterSkew,
+                sensor.frameDuration,
                 statistics.faceDetectMode,
                 statistics.hotPixelMapMode,
                 statistics.faces,
