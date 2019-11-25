@@ -274,31 +274,6 @@ ControlUnit::getDevicesPath()
         }
     }
 
-#if 0
-    // get flashlight device path
-    if (!sensorInfo || sensorInfo->mModuleFlashDevName == "") {
-        LOGW("%s: No flashlight found", __FUNCTION__);
-    } else {
-        struct stat sb;
-        int PathExists = stat(sensorInfo->mModuleFlashDevName.c_str(), &sb);
-        if (PathExists != 0) {
-            LOGE("Error, could not find flashlight subdev %s !", entityName.c_str());
-        } else {
-            mDevPathsMap[KDevPathTypeFlNode] = sensorInfo->mModuleFlashDevName;
-        }
-    }
-#endif
-    // get isp subdevice path
-    entityName = "rkisp1-isp-subdev";
-    status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
-    if (mediaEntity == nullptr || status != NO_ERROR) {
-        LOGE("Could not retrieve media entity %s", entityName.c_str());
-        return UNKNOWN_ERROR;
-    }
-
-    mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
-    if (subdev.get())
-        mDevPathsMap[KDevPathTypeIspDevNode] = subdev->name();
     // get sensor device path
     camHwInfo->getSensorEntityName(mCameraId, entityName);
     if (entityName == "none") {
@@ -317,6 +292,44 @@ ControlUnit::getDevicesPath()
             mSensorSubdev = subdev;
         }
     }
+
+#if 0
+    // get flashlight device path
+    if (!sensorInfo || sensorInfo->mModuleFlashDevName == "") {
+        LOGW("%s: No flashlight found", __FUNCTION__);
+    } else {
+        struct stat sb;
+        int PathExists = stat(sensorInfo->mModuleFlashDevName.c_str(), &sb);
+        if (PathExists != 0) {
+            LOGE("Error, could not find flashlight subdev %s !", entityName.c_str());
+        } else {
+            mDevPathsMap[KDevPathTypeFlNode] = sensorInfo->mModuleFlashDevName;
+        }
+    }
+#endif
+    std::vector<media_link_desc> links;
+    mediaEntity->getLinkDesc(links);
+    if (links.size()) {
+        struct media_pad_desc* pad = &links[0].sink;
+        struct media_entity_desc entityDesc;
+        mMediaCtl->findMediaEntityById(pad->entity, entityDesc);
+        string name = entityDesc.name;
+        // check linked to cif or isp
+        if (name.find("cif") != std::string::npos)
+            return OK;
+    }
+
+    // get isp subdevice path
+    entityName = "rkisp1-isp-subdev";
+    status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
+    if (mediaEntity == nullptr || status != NO_ERROR) {
+        LOGE("Could not retrieve media entity %s", entityName.c_str());
+        return UNKNOWN_ERROR;
+    }
+
+    mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
+    if (subdev.get())
+        mDevPathsMap[KDevPathTypeIspDevNode] = subdev->name();
 
     // get isp input params device path
     entityName = "rkisp1-input-params";
