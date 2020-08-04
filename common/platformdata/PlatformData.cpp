@@ -569,9 +569,9 @@ void PlatformData::init()
         deinit();
         return;
     }
-
-	rkisp_metadata_info_t *metadata_info = NULL;
 	int num = 0;
+	rkisp_metadata_info_t *metadata_info = NULL;
+#if 0
 	ret = rkisp_construct_iq_default_metadatas(&metadata_info, &num);
 	if (ret < 0) {
         LOGE("Fail to construct iq default metadatas!");
@@ -583,6 +583,7 @@ void PlatformData::init()
         deinit();
         return;
 	}
+#endif
     /**
      * This number currently comes from the number if sections in the XML
      * in the future this is not reliable if we want to have multiple cameras
@@ -1721,6 +1722,52 @@ status_t CameraHWInfo::getSensorFrameDuration(int32_t cameraId, int32_t &duratio
         return ret;
     }
     device->getSensorFrameDuration(duration);
+
+    ret |= device->close();
+    if (ret != NO_ERROR)
+        LOGE("Error closing device (%s)", devname);
+
+    return ret;
+}
+
+status_t CameraHWInfo::getDvTimings(int32_t cameraId,
+		struct v4l2_dv_timings &timings) const
+{
+    status_t ret = NO_ERROR;
+    const char *devname;
+    std::string sDevName;
+
+    string sensorEntityName = "none";
+
+    ret = getSensorEntityName(cameraId, sensorEntityName);
+    if (ret != NO_ERROR)
+        return UNKNOWN_ERROR;
+
+    for (size_t i = 0; i < mSensorInfo.size(); i++) {
+        if (sensorEntityName.find(mSensorInfo[i].mSensorName) == std::string::npos)
+            continue;
+
+        std::ostringstream stringStream;
+        stringStream << "/dev/" << mSensorInfo[i].mDeviceName.c_str();
+        sDevName = stringStream.str();
+    }
+    devname = sDevName.c_str();
+    std::shared_ptr<V4L2Subdevice> device = std::make_shared<V4L2Subdevice>(devname);
+    if (device.get() == nullptr) {
+        LOGE("Couldn't open device %s", devname);
+        return UNKNOWN_ERROR;
+    }
+
+    ret = device->open();
+    if (ret != NO_ERROR) {
+        LOGE("Error opening device (%s)", devname);
+        return ret;
+    }
+
+    ret = device->queryDvTimings(timings);
+    if (ret != NO_ERROR) {
+        LOGE("Error queryDvTimings ret:%d (%s)", ret, devname);
+    }
 
     ret |= device->close();
     if (ret != NO_ERROR)

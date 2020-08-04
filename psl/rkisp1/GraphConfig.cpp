@@ -2614,6 +2614,13 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
 
     struct v4l2_selection select;
     CLEAR(select);
+	struct v4l2_dv_timings timings;
+	CLEAR(timings);
+	PlatformData::getCameraHWInfo()->getDvTimings(cameraId, timings);
+	if (timings.bt.interlaced == V4L2_DV_INTERLACED) {
+	   LOGE("%s Line:%d, V4L2_DV_INTERLACED", __func__, __LINE__);
+	   spStream = mpStream;
+	} else {
     if(mpStream) {
         /* videodev2.h says don't use *_MPLAEN */
         uint32_t mpInWidth = ispOutWidth;
@@ -2661,7 +2668,7 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
         LOGE("@%s : No app stream map to mainPath", __FUNCTION__);
         return UNKNOWN_ERROR;
     }
-
+	}
     //if mainPath is used to output raw, disable selfPath
     if(spStream && spName != "none" && !mMpOutputRaw) {
         uint32_t spInWidth = ispOutWidth;
@@ -2694,7 +2701,11 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
             }
             addSelectionVideoParams(spName, select, mediaCtlConfig);
             addFormatParams(spName, videoWidth, videoHeight, spSinkPad, videoOutFormat, 0, 0, mediaCtlConfig);
-            addImguVideoNode(IMGU_NODE_VF_PREVIEW, spName, mediaCtlConfig);
+			if (timings.bt.interlaced == V4L2_DV_INTERLACED) {
+			       addImguVideoNode(IMGU_NODE_VIDEO, spName, mediaCtlConfig);
+			} else {
+			       addImguVideoNode(IMGU_NODE_VF_PREVIEW, spName, mediaCtlConfig);
+			}
             addLinkParams(IspName, ispSrcPad, spName,  spSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
         }
     } else {
