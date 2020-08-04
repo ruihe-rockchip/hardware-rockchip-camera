@@ -531,6 +531,7 @@ private:
     string mSecondNodeName;
     bool   mIsMipiInterface;
     bool   mSensorLinkedToCIF;
+    string mSnsLinkedPhyEntNm;
     bool   mMpOutputRaw;
     SensorFormat mAvailableSensorFormat;
     MediaCtlFormatParams mCurSensorFormat;

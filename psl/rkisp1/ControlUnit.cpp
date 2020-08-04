@@ -260,44 +260,20 @@ ControlUnit::getDevicesPath()
     std::shared_ptr<V4L2Subdevice> subdev = nullptr;
     status_t status = OK;
 
+    const struct SensorDriverDescriptor* sensorInfo = camHwInfo->getSensorDrvDes(mCameraId);
     // get lens device path
-    if (camHwInfo->mSensorInfo[mCameraId].mModuleLensDevName == "") {
+    if (!sensorInfo || sensorInfo->mModuleLensDevName == "") {
         LOGW("%s: No lens found", __FUNCTION__);
     } else {
         struct stat sb;
-        int PathExists = stat(camHwInfo->mSensorInfo[mCameraId].mModuleLensDevName.c_str(), &sb);
+        int PathExists = stat(sensorInfo->mModuleLensDevName.c_str(), &sb);
         if (PathExists != 0) {
             LOGE("Error, could not find lens subdev %s !", entityName.c_str());
         } else {
-            mDevPathsMap[KDevPathTypeLensNode] = camHwInfo->mSensorInfo[mCameraId].mModuleLensDevName;
+            mDevPathsMap[KDevPathTypeLensNode] = sensorInfo->mModuleLensDevName;
         }
     }
 
-#if 0
-    // get flashlight device path
-    if (camHwInfo->mSensorInfo[mCameraId].mModuleFlashDevName == "") {
-        LOGW("%s: No flashlight found", __FUNCTION__);
-    } else {
-        struct stat sb;
-        int PathExists = stat(camHwInfo->mSensorInfo[mCameraId].mModuleFlashDevName.c_str(), &sb);
-        if (PathExists != 0) {
-            LOGE("Error, could not find flashlight subdev %s !", entityName.c_str());
-        } else {
-            mDevPathsMap[KDevPathTypeFlNode] = camHwInfo->mSensorInfo[mCameraId].mModuleFlashDevName;
-        }
-    }
-#endif
-    // get isp subdevice path
-    entityName = "rkisp1-isp-subdev";
-    status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
-    if (mediaEntity == nullptr || status != NO_ERROR) {
-        LOGE("Could not retrieve media entity %s", entityName.c_str());
-        return UNKNOWN_ERROR;
-    }
-
-    mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
-    if (subdev.get())
-        mDevPathsMap[KDevPathTypeIspDevNode] = subdev->name();
     // get sensor device path
     camHwInfo->getSensorEntityName(mCameraId, entityName);
     if (entityName == "none") {
@@ -316,6 +292,44 @@ ControlUnit::getDevicesPath()
             mSensorSubdev = subdev;
         }
     }
+
+#if 0
+    // get flashlight device path
+    if (!sensorInfo || sensorInfo->mModuleFlashDevName == "") {
+        LOGW("%s: No flashlight found", __FUNCTION__);
+    } else {
+        struct stat sb;
+        int PathExists = stat(sensorInfo->mModuleFlashDevName.c_str(), &sb);
+        if (PathExists != 0) {
+            LOGE("Error, could not find flashlight subdev %s !", entityName.c_str());
+        } else {
+            mDevPathsMap[KDevPathTypeFlNode] = sensorInfo->mModuleFlashDevName;
+        }
+    }
+#endif
+    std::vector<media_link_desc> links;
+    mediaEntity->getLinkDesc(links);
+    if (links.size()) {
+        struct media_pad_desc* pad = &links[0].sink;
+        struct media_entity_desc entityDesc;
+        mMediaCtl->findMediaEntityById(pad->entity, entityDesc);
+        string name = entityDesc.name;
+        // check linked to cif or isp
+        if (name.find("cif") != std::string::npos)
+            return OK;
+    }
+
+    // get isp subdevice path
+    entityName = "rkisp1-isp-subdev";
+    status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
+    if (mediaEntity == nullptr || status != NO_ERROR) {
+        LOGE("Could not retrieve media entity %s", entityName.c_str());
+        return UNKNOWN_ERROR;
+    }
+
+    mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
+    if (subdev.get())
+        mDevPathsMap[KDevPathTypeIspDevNode] = subdev->name();
 
     // get isp input params device path
     entityName = "rkisp1-input-params";
@@ -461,13 +475,14 @@ ControlUnit::init()
     getDevicesPath();
 
     const CameraHWInfo* camHwInfo = PlatformData::getCameraHWInfo();
+    const struct SensorDriverDescriptor* sensorInfo = camHwInfo->getSensorDrvDes(mCameraId);
     if (cap->sensorType() == SENSOR_TYPE_SOC &&
-        camHwInfo->mSensorInfo[mCameraId].mFlashNum > 0 &&
+        sensorInfo->mFlashNum > 0 &&
         mFlashSupported) {
         mSocCamFlashCtrUnit = std::unique_ptr<SocCamFlashCtrUnit>(
                               new SocCamFlashCtrUnit(
                               // TODO: support only one flash for SoC now
-                              camHwInfo->mSensorInfo[mCameraId].mModuleFlashDevName[0].c_str(),
+                              sensorInfo->mModuleFlashDevName[0].c_str(),
                               mCameraId));
     }
 
@@ -636,11 +651,12 @@ ControlUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams, bool c
         }
 
         const CameraHWInfo* camHwInfo = PlatformData::getCameraHWInfo();
+        const struct SensorDriverDescriptor* sensorInfo = camHwInfo->getSensorDrvDes(mCameraId);
 
         if (mFlashSupported) {
-            for (int i = 0; i < camHwInfo->mSensorInfo[mCameraId].mFlashNum; i++) {
+            for (int i = 0; i < sensorInfo->mFlashNum; i++) {
                 prepareParams.flashlight_sd_node_path[i] =
-                    camHwInfo->mSensorInfo[mCameraId].mModuleFlashDevName[i].c_str();
+                    sensorInfo->mModuleFlashDevName[i].c_str();
             }
         }
 

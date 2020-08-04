@@ -2459,6 +2459,7 @@ status_t GraphConfig::getSensorMediaCtlConfig(int32_t cameraId,
             mSensorLinkedToCIF = true;
         if (name.find("mipi") != std::string::npos) {
             mIsMipiInterface = true;
+            mSnsLinkedPhyEntNm = name;
             //check sensor->mipi->cif case
             std::shared_ptr<MediaEntity> phyEntity = nullptr;
             ret = mMediaCtl->getMediaEntity(phyEntity, name.c_str());
@@ -2529,7 +2530,8 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
     std::vector<std::string> elementNames;
     PlatformData::getCameraHWInfo()->getMediaCtlElementNames(elementNames);
     for (auto &it: elementNames) {
-        if (it.find("mipi") != std::string::npos)
+        if (it.find("mipi") != std::string::npos &&
+            mSnsLinkedPhyEntNm == it)
             csiName = it;
         if (it.find("isp-subdev") != std::string::npos)
             IspName = it;

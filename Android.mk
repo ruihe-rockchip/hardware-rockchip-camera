@@ -122,7 +122,6 @@ LOCAL_C_INCLUDES += \
     system/core/liblog/include
 endif
 LOCAL_C_INCLUDES += \
-    hardware/rockchip/libgralloc \
     hardware/libhardware/include \
     system/media/camera/include \
     system/core/libsync \
@@ -133,6 +132,29 @@ LOCAL_C_INCLUDES += \
     hardware/rockchip/librga \
     external/libchrome \
     $(LOCAL_PATH)/include/arc
+
+# API 29 -> Android 10.0
+ifneq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \< 29)))
+
+ifeq ($(strip $(TARGET_BOARD_PLATFORM_GPU)), mali-tDVx)
+LOCAL_C_INCLUDES += \
+        hardware/rockchip/libgralloc/bifrost
+endif
+
+ifneq (,$(filter mali-t860 mali-t760, $(TARGET_BOARD_PLATFORM_GPU)))
+LOCAL_C_INCLUDES += \
+        hardware/rockchip/libgralloc/midgard
+endif
+
+ifneq (,$(filter mali400 mali450, $(TARGET_BOARD_PLATFORM_GPU)))
+LOCAL_C_INCLUDES += \
+        hardware/rockchip/libgralloc/utgard
+endif
+else
+LOCAL_C_INCLUDES += \
+        hardware/rockchip/libgralloc
+
+endif
 
 #cpphacks
 CPPHACKS = \
@@ -237,6 +259,12 @@ endif
 ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 29)))
     LOCAL_CFLAGS += -DANDROID_VERSION_ABOVE_10_X
     LOCAL_CPPFLAGS += -std=c++1y
+
+ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3368)
+LOCAL_C_INCLUDES += \
+    system/core/libion/original-kernel-headers
+endif
+
 endif
 
 LOCAL_MODULE_RELATIVE_PATH := hw

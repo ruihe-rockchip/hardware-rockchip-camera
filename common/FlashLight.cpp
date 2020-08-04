@@ -67,12 +67,15 @@ int32_t FlashLight::getFlashLightInfo(
     CheckError(!camHwInfo, -EINVAL, "@%s,  camera hw info was not uninitialized",
                    __FUNCTION__);
 
-    int flash_num = camHwInfo->mSensorInfo[cameraId].mFlashNum;
+    const struct SensorDriverDescriptor* sensorInfo = camHwInfo->getSensorDrvDes(cameraId);
+    CheckError(!sensorInfo, -EINVAL, "@%s,  camera sensor info was not uninitialized",
+                   __FUNCTION__);
+
+    int flash_num = sensorInfo->mFlashNum;
 
     for (int i = 0; i < flash_num; i++) {
 
-        const std::string& node =
-            camHwInfo->mSensorInfo[cameraId].mModuleFlashDevName[i];
+        const std::string& node = sensorInfo->mModuleFlashDevName[i];
         flashNode[i] = node.c_str();
     }
 
