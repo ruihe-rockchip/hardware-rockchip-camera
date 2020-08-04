@@ -2,7 +2,7 @@
 ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 28)))
 CUR_PATH := $(TOP)/hardware/rockchip/camera/etc
 else
-CUR_PATH := $(TOP)/hardware/rockchip/camera_v3/etc
+CUR_PATH := $(TOP)/hardware/rockchip/camera/etc
 endif
 
 ifeq ($(filter box atv vr stbvr, $(strip $(TARGET_BOARD_PLATFORM_PRODUCT))), )
